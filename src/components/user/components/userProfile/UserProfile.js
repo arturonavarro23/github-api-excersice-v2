@@ -13,12 +13,7 @@ const UserProfile = (props) => {
     hasError,
   } = props;
 
-  const [repos, query, setQuery] = useFilterRepos(user.repos || []);
-
-  const onFilterChange = (e) => {
-    const query = e.target.value;
-    setQuery(query);
-  };
+  const [repos, query, onQueryChange] = useFilterRepos(user.repos || []);
 
   const renderRepo = repo => (
     <Repo key={repo.id} repo={repo} />
@@ -59,7 +54,7 @@ const UserProfile = (props) => {
                       placeholder="Filter..."
                       name="query"
                       value={query}
-                      onChange={onFilterChange}
+                      onChange={onQueryChange}
                     />
                   </Col>
                 </Row>
