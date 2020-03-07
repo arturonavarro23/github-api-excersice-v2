@@ -1,10 +1,10 @@
-import React, { lazy } from 'react';
-import { BrowserRouter, Route, Link } from 'react-router-dom';
-import lazyComponent from '../hoc/lazyComponent';
-import './App.scss';
+import React, { lazy, Suspense } from "react";
+import { BrowserRouter, Route, Link, Switch } from "react-router-dom";
+import Loader from "../components/loader";
+import "./App.scss";
 
-const Repositories = lazy(() => import('./repositories'));
-const User = lazy(() => import('./user'));
+const Repositories = lazy(() => import("./repositories"));
+const User = lazy(() => import("./user"));
 
 const App = () => {
   return (
@@ -12,13 +12,15 @@ const App = () => {
       <div className="App">
         <header className="App-header">
           <p>
-            <Link to="/">
-              Github API
-            </Link>
+            <Link to="/">Github API V2</Link>
           </p>
         </header>
-        <Route path="/" exact component={lazyComponent(Repositories)} />
-        <Route path="/user/:name" component={lazyComponent(User)} />
+        <Suspense fallback={<Loader />}>
+          <Switch>
+            <Route exact path="/" component={Repositories} />
+            <Route path="/user/:name" component={User} />
+          </Switch>
+        </Suspense>
       </div>
     </BrowserRouter>
   );

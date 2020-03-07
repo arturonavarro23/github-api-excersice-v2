@@ -1,96 +1,66 @@
-import React, { useEffect, Fragment, Suspense } from 'react';
-import { Grid, Row, Col, Modal } from 'react-bootstrap';
-import Form from './components/form';
-import Results from './components/results';
-import Comments from './components/comments';
-import Loader from '../loader';
-import GitHub from '../../services/github';
-import useState from '../../hooks/useState';
+import React, { useEffect, Fragment, Suspense } from "react";
+import { Grid, Row, Col, Modal } from "react-bootstrap";
+import Form from "./components/form";
+import Results from "./components/results";
+import Comments from "./components/comments";
+import Loader from "../loader";
+import GitHub from "../../services/github";
+import useState from "../../hooks/useState";
+
+const SUSPENSE_CONFIG = {
+  timeoutMs: 1000,
+};
 
 const Repositories = () => {
   const [state, setState] = useState({
-    repositories: [],
-    isFetchingRepos: false,
     commentsModalOpen: false,
-    isFetchingComments: false,
-    comments: [],
-    query: 'facebook',
+    query: "facebook",
+    repositoriesResource: null,
+    commentsResource: null
   });
 
-  useEffect(() => {
-    searchResults();
-  }, []);
+  const [startTransition] = React.useTransition(SUSPENSE_CONFIG);
 
-  const onSearchFormSubmit = (e) => {
-    e.preventDefault();
-    searchResults();
+  useEffect(
+    () => {
+      startTransition(() => {
+        setState({
+          repositoriesResource: GitHub.getRepositories(state.query)
+        });
+      });
+    },
+    [state.query, startTransition]
+  );
+
+  const onSearchFormSubmit = query => {
+    setState({
+      query
+    });
   };
 
   const onRepositoryClick = repo => {
     setState({
-      commentsModalOpen: true,
-      isFetchingComments: true, 
+      commentsModalOpen: true
     });
 
-    GitHub.getComments(repo)
-      .then(response => {
-        const { data } = response;
-        const comments = data.sort((curr, prev) => prev.id - curr.id);
-        setState({
-          comments:  comments.slice(0, 5),
-          isFetchingComments: false,
-        });
-      })
-      .catch(() => {
-        setState({
-          comments: [],
-          isFetchingComments: false,
-        });
+    startTransition(() => {
+      setState({
+        commentsResource: GitHub.getComments(repo)
       });
-  }
+    });
+  };
 
   const closeModal = () => {
     setState({
-      isFetchingComments: true,
-      commentsModalOpen: false,
+      commentsModalOpen: false
     });
-  }
+  };
 
-  const searchResults = () => {
-    const { query } = state;
-    setState({
-      isFetchingRepos: true,
-    });
-
-    GitHub.getRepositories(query)
-      .then(response => {
-        const { data: { items } } = response;
-        setState({
-          repositories: items,
-          isFetchingRepos: false,
-        });
-      })
-      .catch(() => {
-        setState({
-          repositories: [],
-          isFetchingRepos: false,
-        });
-      });
-  }
-
-  const onInputChange = (e) => {
-    setState({
-      query: e.target.value,
-    });
-  }
-  
   const {
-    repositories,
-    isFetchingRepos,
+    repositoriesResource,
+    commentsResource,
     commentsModalOpen,
-    isFetchingComments,
-    comments,
-    query,
+    query
   } = state;
 
   return (
@@ -98,18 +68,19 @@ const Repositories = () => {
       <Grid>
         <Row>
           <Col xs={12}>
-            <Form
-              inputValue={query}
-              onSubmit={onSearchFormSubmit}
-              onInputChange={onInputChange}
-            />
+            <Form inputValue={query} onSubmit={onSearchFormSubmit} />
           </Col>
         </Row>
-        <Results 
-          isLoading={isFetchingRepos}
-          repositories={repositories}
-          onRepositoryClick={onRepositoryClick}
-        />
+        <Row>
+          <Suspense fallback={<Loader />}>
+            {repositoriesResource && (
+              <Results
+                resource={repositoriesResource}
+                onRepositoryClick={onRepositoryClick}
+              />
+            )}
+          </Suspense>
+        </Row>
       </Grid>
       <Modal show={commentsModalOpen} onHide={closeModal}>
         <Modal.Header closeButton>
@@ -117,10 +88,7 @@ const Repositories = () => {
         </Modal.Header>
         <Modal.Body>
           <Suspense fallback={<Loader />}>
-            <Comments 
-              isLoading={isFetchingComments}
-              comments={comments}
-            />
+            {commentsResource && <Comments resource={commentsResource} />}
           </Suspense>
         </Modal.Body>
       </Modal>

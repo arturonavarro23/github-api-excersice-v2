@@ -1,11 +1,12 @@
 import React, { memo } from 'react';
 import { Grid, Row, Col } from 'react-bootstrap';
-import withLoader from '../../../../hoc/withLoader';
 
 const Comments = memo((props) => {
   const {
-    comments,
+    resource,
   } = props;
+
+  const comments = resource.read();
 
   const renderComment = (comment, i) => {
     const { id, body, created_at } = comment;
@@ -39,4 +40,4 @@ const Comments = memo((props) => {
   );
 });
 
-export default withLoader(Comments);
+export default Comments;
