@@ -31,7 +31,7 @@
     "not op_mini all"
   ],
   "devDependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "node-sass": "^4.11.0",
     "react-app-rewire-disable-chunks": "^0.0.1",
     "react-app-rewired": "^2.1.3"
